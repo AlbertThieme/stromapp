@@ -5,7 +5,14 @@
 
 "use strict";
 
-const STORAGE_KEY = "stromzaehler.readings.v1";
+// Zwei getrennte Bereiche ("Reiter"): eigene Daten + Beispiel-Daten.
+// Jeder Reiter hat seinen eigenen Speicher und stört den anderen nie.
+const STORAGE_KEYS = {
+  main: "stromzaehler.readings.v2",   // "Meine Daten" – startet leer
+  demo: "stromzaehler.demo.v1",       // "Beispiel" – mit Demo-Daten gefüllt
+};
+const ACTIVE_TAB_KEY = "stromzaehler.activeTab";
+let currentMode = "main";             // "main" | "demo"
 const MONTHS_DE = [
   "Januar", "Februar", "März", "April", "Mai", "Juni",
   "Juli", "August", "September", "Oktober", "November", "Dezember",
@@ -18,15 +25,16 @@ let readings = [];   // [{id, date:"YYYY-MM-DD", value:Number}]
 let nextId = 1;
 
 function load() {
+  const key = STORAGE_KEYS[currentMode];
   let raw = null;
-  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+  try { raw = localStorage.getItem(key); } catch (e) { raw = null; }
   let data;
   if (raw) {
     try { data = JSON.parse(raw); } catch (e) { data = []; }
-  } else if (window.SEED_DATA) {
-    data = window.SEED_DATA;   // erster Start -> Demo-Daten
+  } else if (currentMode === "demo" && window.SEED_DATA) {
+    data = window.SEED_DATA;   // erster Start des Beispiel-Reiters -> Demo-Daten
   } else {
-    data = [];
+    data = [];                 // "Meine Daten" startet leer
   }
   readings = data.map((r) => ({ id: nextId++, date: r.date, value: Number(r.value) }));
   save();
@@ -35,7 +43,7 @@ function load() {
 function save() {
   try {
     const slim = readings.map((r) => ({ date: r.date, value: r.value }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+    localStorage.setItem(STORAGE_KEYS[currentMode], JSON.stringify(slim));
   } catch (e) { /* Speicher voll/gesperrt – ignorieren */ }
 }
 
@@ -321,7 +329,10 @@ function renderMonths(m) {
 function renderList(rangeAsc) {
   const el = document.getElementById("list");
   if (!rangeAsc.length) {
-    el.innerHTML = `<div class="empty"><div class="big">📭</div>Keine Einträge im gewählten Zeitraum.</div>`;
+    const hint = (currentMode === "main" && !readings.length)
+      ? `Noch keine eigenen Einträge. Trage oben deinen ersten Zählerstand ein – oder sieh dir den Reiter <strong>„Beispiel"</strong> an, um zu sehen, wie es gefüllt aussieht.`
+      : `Keine Einträge im gewählten Zeitraum.`;
+    el.innerHTML = `<div class="empty"><div class="big">📭</div>${hint}</div>`;
     return;
   }
   const desc = [...rangeAsc].reverse();
@@ -493,11 +504,41 @@ function importData(file) {
 }
 
 // ---------------------------------------------------------------------------
+// Reiter umschalten ("Meine Daten" / "Beispiel")
+// ---------------------------------------------------------------------------
+function reflectActiveTab() {
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.classList.toggle("active", t.getAttribute("data-mode") === currentMode));
+  const note = document.getElementById("demo-note");
+  if (note) note.hidden = (currentMode !== "demo");
+}
+
+function switchMode(mode) {
+  if (mode !== "main" && mode !== "demo") return;
+  if (mode === currentMode) return;
+  save();                       // aktuellen Reiter sichern
+  currentMode = mode;
+  try { localStorage.setItem(ACTIVE_TAB_KEY, mode); } catch (e) {}
+  reflectActiveTab();
+  load();                       // Daten des neuen Reiters laden
+  resetFilters();               // Filter neu setzen + alles neu zeichnen
+  document.getElementById("date").value = ymd(new Date());
+}
+
+// ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
 function init() {
+  try {
+    const saved = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (saved === "main" || saved === "demo") currentMode = saved;
+  } catch (e) { /* ignorieren */ }
+  reflectActiveTab();
   load();
   resetFilters();   // setzt Filter auf vollen Datenbereich und zeichnet alles
+
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.addEventListener("click", () => switchMode(t.getAttribute("data-mode"))));
 
   document.getElementById("date").value = ymd(new Date());
 

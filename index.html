@@ -34,6 +34,23 @@
 
   <div class="container">
 
+    <!-- Reiter: eigene Daten vs. Beispiel-Daten -->
+    <div class="tabs" role="tablist" aria-label="Datenbereich">
+      <button type="button" class="tab active" data-mode="main" role="tab">
+        <span class="t-ico">📋</span> Meine Daten
+      </button>
+      <button type="button" class="tab" data-mode="demo" role="tab">
+        <span class="t-ico">🎬</span> Beispiel
+      </button>
+    </div>
+
+    <!-- Hinweis nur im Beispiel-Bereich -->
+    <div id="demo-note" class="demo-note" hidden>
+      👀 Das ist der <strong>Beispiel-Bereich</strong> mit Demo-Daten zum Ausprobieren.
+      Deine echten Werte trägst du im Reiter <strong>„Meine Daten"</strong> ein –
+      die beiden stören sich nicht.
+    </div>
+
     <!-- Filter -->
     <div class="card filter-card">
       <h2><span class="ico">🎛️</span> Filter</h2>

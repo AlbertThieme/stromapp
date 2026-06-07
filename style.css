@@ -37,6 +37,35 @@ header .container { padding-bottom: 0; }
 .brand h1 { font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -.02em; }
 .brand p { margin: 2px 0 0; opacity: .85; font-size: .9rem; }
 
+/* Reiter (Tabs) */
+.tabs {
+  display: flex; gap: 6px; padding: 6px; position: relative; z-index: 1;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 18px;
+}
+.tab {
+  flex: 1; padding: 11px 14px; border: 0; border-radius: 11px;
+  background: transparent; color: var(--muted);
+  font-family: inherit; font-weight: 600; font-size: .95rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.tab .t-ico { font-size: 1.05rem; }
+.tab:hover { background: var(--accent-soft); color: var(--text); }
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,.30);
+}
+.tab.active:hover { color: #fff; }
+
+/* Hinweisbanner im Beispiel-Bereich */
+.demo-note {
+  background: var(--accent-soft); border: 1px solid #c7d2fe; color: #3730a3;
+  border-radius: 14px; padding: 13px 16px; margin-bottom: 22px;
+  font-size: .9rem; line-height: 1.55;
+}
+.demo-note[hidden] { display: none; }
+
 /* Kacheln */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
 .stat {
