@@ -101,6 +101,10 @@
           <label for="value">Zählerstand (kWh)</label>
           <input type="number" id="value" name="value" step="any" placeholder="z. B. 12345" required>
         </div>
+        <div class="field wide">
+          <label for="comment">Notiz (optional)</label>
+          <input type="text" id="comment" name="comment" maxlength="200" placeholder="z. B. Beginn der Heizperiode">
+        </div>
         <button type="submit" class="primary">Speichern</button>
       </form>
     </div>
@@ -129,8 +133,9 @@
       <div class="backup-row">
         <button type="button" class="ghost" id="export-btn">⬇️ Daten exportieren</button>
         <button type="button" class="ghost" id="import-btn">⬆️ Daten importieren</button>
-        <input type="file" id="import-file" accept="application/json" hidden>
-        <p class="hint">Deine Daten liegen nur auf diesem Gerät. Mit „Exportieren" sicherst du sie als Datei – z. B. regelmäßig oder vor einem Gerätewechsel.</p>
+        <input type="file" id="import-file" accept=".json,.csv,application/json,text/csv" hidden>
+        <p class="hint">Deine Daten liegen nur auf diesem Gerät. Mit „Exportieren" sicherst du sie als Datei – z. B. regelmäßig oder vor einem Gerätewechsel.<br>
+        <strong>Importieren</strong> akzeptiert ein Backup (<code>.json</code>) <em>oder</em> eine Tabelle als <code>.csv</code> (zwei Spalten: Datum, Zählerstand) – z. B. ein CSV-Export aus Google Tabellen.</p>
       </div>
     </div>
 

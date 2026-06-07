@@ -61,6 +61,22 @@ Da die Daten nur auf deinem Gerät liegen, solltest du sie ab und zu sichern:
 - **„⬇️ Daten exportieren"** speichert alles als Datei (z. B. in deine Cloud oder per Mail an dich selbst).
 - **„⬆️ Daten importieren"** lädt so eine Datei wieder ein – praktisch bei einem neuen Handy.
 
+## 📥 Daten aus einer Tabelle übernehmen (CSV)
+
+Du kannst über **„⬆️ Daten importieren"** auch eine **`.csv`-Datei** hochladen, z. B. einen Export aus Google Tabellen oder Excel. Pro Zeile braucht es nur:
+
+```
+Datum, Zählerstand, (optional) Notiz
+2026-05-31, 15370, Heizung aus
+```
+
+Die App ist dabei flexibel und erkennt automatisch:
+- Datum als `2026-05-31` **oder** `31.05.26` / `31.05.2026`
+- Zahlen mit Punkt **oder** Komma
+- eine optionale **Notiz** hinter dem Wert (wird als 💬 angezeigt)
+
+> Der Import **ersetzt** die Daten im aktuell offenen Reiter – importiere also im Reiter „Meine Daten".
+
 ---
 
 ## ❓ Häufige Fragen

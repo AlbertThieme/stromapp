@@ -105,6 +105,7 @@ form.filter { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; 
 /* Formular */
 form.add { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
 .field { display: flex; flex-direction: column; flex: 1 1 150px; }
+.field.wide { flex: 1 1 100%; }   /* Notizfeld nimmt eine eigene Zeile ein */
 label { font-size: .76rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
 input {
   padding: 12px 13px; border: 1px solid var(--border); border-radius: 11px;
@@ -133,6 +134,10 @@ tbody tr { transition: background .12s; }
 tbody tr:hover { background: #fafbff; }
 th { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
 td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.note {
+  margin-top: 5px; font-size: .82rem; color: var(--accent-2);
+  font-weight: 500; line-height: 1.35;
+}
 td.actions { text-align: right; width: 1%; white-space: nowrap; }
 .del {
   background: #fff; color: #ef4444; padding: 7px 12px; font-size: .82rem; font-weight: 600;

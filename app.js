@@ -36,13 +36,18 @@ function load() {
   } else {
     data = [];                 // "Meine Daten" startet leer
   }
-  readings = data.map((r) => ({ id: nextId++, date: r.date, value: Number(r.value) }));
+  readings = data.map((r) => ({
+    id: nextId++, date: r.date, value: Number(r.value),
+    comment: r.comment ? String(r.comment) : "",
+  }));
   save();
 }
 
 function save() {
   try {
-    const slim = readings.map((r) => ({ date: r.date, value: r.value }));
+    const slim = readings.map((r) =>
+      r.comment ? { date: r.date, value: r.value, comment: r.comment }
+                : { date: r.date, value: r.value });
     localStorage.setItem(STORAGE_KEYS[currentMode], JSON.stringify(slim));
   } catch (e) { /* Speicher voll/gesperrt – ignorieren */ }
 }
@@ -86,6 +91,10 @@ function g(n) {
 }
 function f0(n) { return String(Math.round(n)); }
 function f1(n) { return n.toFixed(1); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 // ---------------------------------------------------------------------------
 // Berechnungen (1:1 wie die frühere Python-Logik)
@@ -338,7 +347,7 @@ function renderList(rangeAsc) {
   const desc = [...rangeAsc].reverse();
   const rows = desc.map((r) => `
     <tr>
-      <td>${r.date}</td>
+      <td>${r.date}${r.comment ? `<div class="note">💬 ${esc(r.comment)}</div>` : ""}</td>
       <td class="num">${g(r.value)}</td>
       <td class="actions"><button class="del" data-id="${r.id}">Löschen</button></td>
     </tr>`).join("");
@@ -362,8 +371,14 @@ function renderChart(rangeAsc) {
     fill: "tozeroy",
     fillcolor: "rgba(79,70,229,0.08)",
     line: { color: "#4f46e5", width: 3 },
-    marker: { color: "#4f46e5", size: 8, line: { color: "#fff", width: 1.5 } },
-    hovertemplate: "<b>%{x|%d.%m.%Y}</b><br>%{y} kWh<extra></extra>",
+    marker: {
+      // Punkte mit Kommentar werden größer und violett hervorgehoben
+      color: rangeAsc.map((r) => (r.comment ? "#7c3aed" : "#4f46e5")),
+      size: rangeAsc.map((r) => (r.comment ? 12 : 8)),
+      line: { color: "#fff", width: 1.5 },
+    },
+    customdata: rangeAsc.map((r) => (r.comment ? "<br>💬 " + r.comment : "")),
+    hovertemplate: "<b>%{x|%d.%m.%Y}</b><br>%{y} kWh%{customdata}<extra></extra>",
   };
   const layout = {
     font: { family: "Inter, system-ui, sans-serif", color: "#475569" },
@@ -445,11 +460,11 @@ function quickRange(months) {
 // ---------------------------------------------------------------------------
 // Eintragen / Löschen
 // ---------------------------------------------------------------------------
-function addReading(dateStr, valueStr) {
+function addReading(dateStr, valueStr, comment) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
   const value = parseFloat(String(valueStr).replace(",", "."));
   if (Number.isNaN(value)) return false;
-  readings.push({ id: nextId++, date: dateStr, value });
+  readings.push({ id: nextId++, date: dateStr, value, comment: (comment || "").trim() });
   save();
   // Zeitraum-Filter ggf. erweitern, damit der neue Eintrag sichtbar ist
   if (dateStr < filters.from) filters.from = dataBounds().min;
@@ -469,7 +484,9 @@ function deleteReading(id) {
 // Export / Import (Backup)
 // ---------------------------------------------------------------------------
 function exportData() {
-  const slim = sortedAsc().map((r) => ({ date: r.date, value: r.value }));
+  const slim = sortedAsc().map((r) =>
+    r.comment ? { date: r.date, value: r.value, comment: r.comment }
+              : { date: r.date, value: r.value });
   const blob = new Blob([JSON.stringify(slim, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -481,24 +498,113 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
+// --- CSV/Text-Import (für Export aus Google Tabellen / Excel / freie Liste) -
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+// Zahl aus "12345", "12345.6", "12345,6", "12.345,6", "12,345.6" -> Number
+function parseNumberLoose(s) {
+  s = String(s).trim().replace(/\s/g, "");
+  if (s === "") return NaN;
+  const hasDot = s.includes("."), hasComma = s.includes(",");
+  if (hasDot && hasComma) {
+    // das zuletzt stehende Trennzeichen ist das Dezimalkomma/-punkt
+    if (s.lastIndexOf(",") > s.lastIndexOf(".")) s = s.replace(/\./g, "").replace(",", ".");
+    else s = s.replace(/,/g, "");
+  } else if (hasComma) {
+    s = s.replace(",", ".");   // einzelnes Komma = Dezimaltrennzeichen
+  }
+  return parseFloat(s);
+}
+
+// Eine Zeile -> { date, value, comment } oder null.
+// Versteht "TT.MM.JJ. 1234kwh Kommentar", ISO-Datum und CSV (, oder ;).
+function parseReadingLine(line) {
+  let s = String(line).replace(/\s+$/, "");
+  if (!s.trim()) return null;
+  let dd, mm, yy, after, m;
+  if ((m = s.match(/^\s*"?\s*(\d{4})-(\d{1,2})-(\d{1,2})"?\.?/))) {          // 2026-01-05
+    yy = +m[1]; mm = +m[2]; dd = +m[3]; after = s.slice(m[0].length);
+  } else if ((m = s.match(/^\s*"?\s*(\d{1,2})[.\/-](\d{1,2})[.\/ -]+(\d{2,4})"?\.?/))) {  // 05.01.26 / 5/1/2026
+    dd = +m[1]; mm = +m[2]; yy = +m[3]; if (yy < 100) yy += 2000; after = s.slice(m[0].length);
+  } else {
+    return null;   // keine Datumszeile (z. B. Überschrift) -> überspringen
+  }
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+  const date = `${yy}-${pad2(mm)}-${pad2(dd)}`;
+  const rest = after.replace(/^[\s,;"']+/, "");
+  // Wert: erste Zahl (optional gefolgt von "kwh" inkl. Tippfehler-Buchstaben)
+  const vm = rest.match(/(\d[\d.,]*\d|\d)\s*(kwh\w*)?/i);
+  if (!vm) return null;
+  const value = parseNumberLoose(vm[1]);
+  if (Number.isNaN(value)) return null;
+  // Kommentar: alles nach dem Wert, von Trennzeichen/Anführungszeichen befreit
+  const comment = rest.slice(vm.index + vm[0].length)
+    .replace(/^[\s,;"']+/, "").replace(/[\s"']+$/, "").trim();
+  return { date, value, comment };
+}
+
+// Ganzer Text -> { readings, total, skipped }
+function parseReadingsText(text) {
+  text = text.replace(/^﻿/, "");   // BOM entfernen
+  const lines = text.split(/\r\n|\r|\n/);
+  const readings = [];
+  let total = 0;
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    total++;
+    const r = parseReadingLine(line);
+    if (r) readings.push(r);
+  }
+  return { readings, total, skipped: total - readings.length };
+}
+
+function looksLikeJson(text) {
+  const t = text.trim();
+  return t.startsWith("[") || t.startsWith("{");
+}
+
 function importData(file) {
   const reader = new FileReader();
   reader.onload = function () {
+    const text = String(reader.result);
+    const tabName = currentMode === "demo" ? "Beispiel" : "Meine Daten";
+    const isCsv = /\.csv$/i.test(file.name) || !looksLikeJson(text);
     let data;
-    try { data = JSON.parse(reader.result); } catch (e) {
-      alert("Die Datei ist keine gültige Backup-Datei.");
-      return;
+
+    if (isCsv) {
+      const res = parseReadingsText(text);
+      if (!res.readings.length) {
+        alert("Aus der Datei konnten keine gültigen Zeilen gelesen werden.\n\n" +
+          "Erwartet pro Zeile: ein Datum (z. B. 31.05.26 oder 2026-05-31) und ein " +
+          "Zählerstand (z. B. 15370). Ein Kommentar dahinter ist optional.");
+        return;
+      }
+      const skipNote = res.skipped ? ` (${res.skipped} Zeile(n) ohne erkennbares Datum übersprungen)` : "";
+      const withC = res.readings.filter((r) => r.comment).length;
+      const cNote = withC ? `, davon ${withC} mit Kommentar` : "";
+      if (!confirm(`${res.readings.length} Einträge erkannt${cNote}${skipNote}.\n\n` +
+        `Die Daten im Reiter „${tabName}" werden dadurch ersetzt. Fortfahren?`)) return;
+      data = res.readings;
+    } else {
+      try { data = JSON.parse(text); } catch (e) {
+        alert("Die Datei ist keine gültige Backup- (.json) oder CSV-Datei (.csv).");
+        return;
+      }
+      if (!Array.isArray(data) || !data.every((r) =>
+        r && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && !Number.isNaN(Number(r.value)))) {
+        alert("Die Datei hat nicht das erwartete Format.");
+        return;
+      }
+      if (!confirm(`${data.length} Einträge importieren? Die Daten im Reiter „${tabName}" werden ersetzt.`)) return;
     }
-    if (!Array.isArray(data) || !data.every((r) =>
-      r && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && !Number.isNaN(Number(r.value)))) {
-      alert("Die Datei hat nicht das erwartete Format.");
-      return;
-    }
-    if (!confirm(`${data.length} Einträge importieren? Die aktuellen Daten werden ersetzt.`)) return;
-    readings = data.map((r) => ({ id: nextId++, date: r.date, value: Number(r.value) }));
+
+    readings = data.map((r) => ({
+      id: nextId++, date: r.date, value: Number(r.value),
+      comment: r.comment ? String(r.comment) : "",
+    }));
     save();
     resetFilters();
-    alert("Import erfolgreich.");
+    alert(`Import erfolgreich: ${data.length} Einträge im Reiter „${tabName}".`);
   };
   reader.readAsText(file);
 }
@@ -555,8 +661,12 @@ function init() {
   document.getElementById("add-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const ok = addReading(document.getElementById("date").value,
-                          document.getElementById("value").value);
-    if (ok) document.getElementById("value").value = "";
+                          document.getElementById("value").value,
+                          document.getElementById("comment").value);
+    if (ok) {
+      document.getElementById("value").value = "";
+      document.getElementById("comment").value = "";
+    }
   });
 
   document.getElementById("list").addEventListener("click", (e) => {
