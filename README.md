@@ -79,6 +79,16 @@ Die App ist dabei flexibel und erkennt automatisch:
 
 ---
 
+## 🔐 Wie sicher ist das?
+
+- **Deine Daten bleiben auf deinem Gerät.** Die App hat keinen Server – Zählerstände und Notizen liegen nur im Speicher deines Handys und werden nie irgendwohin verschickt.
+- **Die App läuft im Browser** und sitzt damit in einem abgeschotteten Bereich: Sie kann **nicht** auf deine Fotos, Kontakte, Nachrichten oder andere Apps zugreifen. Kamera oder Standort nur, wenn der Browser dich fragt und du ausdrücklich **„Erlauben"** tippst – und das braucht ein Stromzähler natürlich nicht.
+- **Als App installiert ist sie nicht gefährlicher** als die Webseite einfach im Browser zu öffnen – sie hat genau dieselben (eingeschränkten) Rechte.
+- **Im schlimmsten Fall** (wenn die App-Seite manipuliert würde) ginge es nur um die Daten *dieser* App – nicht um dein restliches Handy.
+- **Guter Schutz:** Handy und Browser aktuell halten, und in Notizen keine hochprivaten Infos schreiben.
+
+---
+
 ## ❓ Häufige Fragen
 
 **Muss ich etwas installieren oder ein Konto anlegen?**
