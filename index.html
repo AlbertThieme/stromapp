@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stromzähler</title>
+  <!-- PWA: macht die App auf dem Handy installierbar (App-Symbol) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Stromzähler">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="plotly.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <div>
+          <h1>Stromzähler</h1>
+          <p>Behalte deinen Verbrauch im Blick</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Filter -->
+    <div class="card filter-card">
+      <h2><span class="ico">🎛️</span> Filter</h2>
+      <form class="filter" id="filter-form">
+        <div class="field">
+          <label for="from">Von</label>
+          <input type="date" id="from" name="from">
+        </div>
+        <div class="field">
+          <label for="to">Bis</label>
+          <input type="date" id="to" name="to">
+        </div>
+        <div class="field narrow">
+          <label for="ref_years">Vorjahre (Vergleich)</label>
+          <input type="number" id="ref_years" name="ref_years" value="2" min="0" max="10">
+        </div>
+        <div class="field narrow">
+          <label for="recent">Letzte Monate</label>
+          <input type="number" id="recent" name="recent" value="3" min="0" max="24">
+        </div>
+        <div class="filter-actions">
+          <button type="submit" class="primary">Anwenden</button>
+          <button type="button" class="reset" id="filter-reset">Zurücksetzen</button>
+        </div>
+      </form>
+      <div class="quick">
+        <span>Schnellauswahl:</span>
+        <button type="button" class="chip" data-months="3">3 Monate</button>
+        <button type="button" class="chip" data-months="6">6 Monate</button>
+        <button type="button" class="chip" data-months="12">12 Monate</button>
+        <button type="button" class="chip" data-months="24">2 Jahre</button>
+        <button type="button" class="chip" id="quick-all">Alles</button>
+      </div>
+    </div>
+
+    <!-- Übersichts-Kacheln -->
+    <div id="stats"></div>
+
+    <!-- Eintragen -->
+    <div class="card">
+      <h2><span class="ico">＋</span> Neuen Stand eintragen</h2>
+      <form class="add" id="add-form">
+        <div class="field">
+          <label for="date">Datum</label>
+          <input type="date" id="date" name="date" required>
+        </div>
+        <div class="field">
+          <label for="value">Zählerstand (kWh)</label>
+          <input type="number" id="value" name="value" step="any" placeholder="z. B. 12345" required>
+        </div>
+        <button type="submit" class="primary">Speichern</button>
+      </form>
+    </div>
+
+    <!-- Grafik -->
+    <div class="card">
+      <h2><span class="ico">📈</span> Verlauf</h2>
+      <div id="chart"></div>
+    </div>
+
+    <!-- Jahresfazit -->
+    <div id="years"></div>
+
+    <!-- Monatsvergleich -->
+    <div id="months"></div>
+
+    <!-- Liste -->
+    <div class="card">
+      <h2><span class="ico">📋</span> Vergangene Stände</h2>
+      <div id="list"></div>
+    </div>
+
+    <!-- Backup -->
+    <div class="card">
+      <h2><span class="ico">💾</span> Backup &amp; Daten</h2>
+      <div class="backup-row">
+        <button type="button" class="ghost" id="export-btn">⬇️ Daten exportieren</button>
+        <button type="button" class="ghost" id="import-btn">⬆️ Daten importieren</button>
+        <input type="file" id="import-file" accept="application/json" hidden>
+        <p class="hint">Deine Daten liegen nur auf diesem Gerät. Mit „Exportieren" sicherst du sie als Datei – z. B. regelmäßig oder vor einem Gerätewechsel.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="seed.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
