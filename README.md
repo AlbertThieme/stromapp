@@ -12,7 +12,14 @@ Du kannst die App einfach im Browser benutzen – oder sie wie eine echte App **
 
 Diese App schickt **nichts** ins Internet. Alle Zählerstände, die du einträgst, werden **nur in deinem eigenen Handy gespeichert** (im Browser-Speicher). Niemand sonst kann sie sehen – auch der Ersteller der App nicht.
 
-> Beim ersten Öffnen siehst du **Beispiel-Daten** zum Ausprobieren. Die kannst du löschen und durch deine eigenen ersetzen.
+## 🗂️ Zwei Reiter oben
+
+Ganz oben gibt es zwei Reiter zum Umschalten:
+
+- **„Meine Daten"** – dein eigener Bereich. Startet **leer**, hier trägst du deine echten Zählerstände ein.
+- **„Beispiel"** – ein Spielwiese-Bereich mit fertigen Demo-Daten. Hier siehst du, **wie die App gefüllt aussieht** (Grafik, Auswertung), und kannst gefahrlos herumprobieren.
+
+Die beiden Bereiche sind komplett getrennt – was du im Beispiel machst, berührt deine echten Daten nie.
 
 ---
 
@@ -67,5 +74,5 @@ Nein, komplett kostenlos.
 **Sehen andere meine Werte?**
 Nein. Deine Werte verlassen dein Handy nie.
 
-**Ich will leer starten (ohne Beispiel-Daten).**
-Lösche die Beispiel-Einträge in der Liste über die „Löschen"-Knöpfe und trage deine eigenen Werte ein.
+**Wo sind die Beispiel-Daten?**
+Der Reiter **„Meine Daten"** ist bewusst leer für deine echten Werte. Die Demo-Daten findest du im Reiter **„Beispiel"** – einfach oben umschalten.
