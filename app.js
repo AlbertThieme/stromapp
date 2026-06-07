@@ -563,49 +563,52 @@ function looksLikeJson(text) {
   return t.startsWith("[") || t.startsWith("{");
 }
 
+// Gemeinsame Import-Logik für Datei UND eingefügten Text.
+function processImportText(text, fileName) {
+  const tabName = currentMode === "demo" ? "Beispiel" : "Meine Daten";
+  const isJson = looksLikeJson(text) && !/\.csv$/i.test(fileName || "");
+  let data;
+
+  if (!isJson) {
+    const res = parseReadingsText(text);
+    if (!res.readings.length) {
+      alert("Es konnten keine gültigen Zeilen gelesen werden.\n\n" +
+        "Erwartet pro Zeile: ein Datum (z. B. 31.05.26 oder 2026-05-31) und ein " +
+        "Zählerstand (z. B. 15370). Ein Kommentar dahinter ist optional.");
+      return false;
+    }
+    const skipNote = res.skipped ? ` (${res.skipped} Zeile(n) ohne erkennbares Datum übersprungen)` : "";
+    const withC = res.readings.filter((r) => r.comment).length;
+    const cNote = withC ? `, davon ${withC} mit Kommentar` : "";
+    if (!confirm(`${res.readings.length} Einträge erkannt${cNote}${skipNote}.\n\n` +
+      `Die Daten im Reiter „${tabName}" werden dadurch ersetzt. Fortfahren?`)) return false;
+    data = res.readings;
+  } else {
+    try { data = JSON.parse(text); } catch (e) {
+      alert("Das ist kein gültiges Backup (.json) und keine erkennbare Datenliste.");
+      return false;
+    }
+    if (!Array.isArray(data) || !data.every((r) =>
+      r && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && !Number.isNaN(Number(r.value)))) {
+      alert("Die Daten haben nicht das erwartete Format.");
+      return false;
+    }
+    if (!confirm(`${data.length} Einträge importieren? Die Daten im Reiter „${tabName}" werden ersetzt.`)) return false;
+  }
+
+  readings = data.map((r) => ({
+    id: nextId++, date: r.date, value: Number(r.value),
+    comment: r.comment ? String(r.comment) : "",
+  }));
+  save();
+  resetFilters();
+  alert(`Import erfolgreich: ${data.length} Einträge im Reiter „${tabName}".`);
+  return true;
+}
+
 function importData(file) {
   const reader = new FileReader();
-  reader.onload = function () {
-    const text = String(reader.result);
-    const tabName = currentMode === "demo" ? "Beispiel" : "Meine Daten";
-    const isCsv = /\.csv$/i.test(file.name) || !looksLikeJson(text);
-    let data;
-
-    if (isCsv) {
-      const res = parseReadingsText(text);
-      if (!res.readings.length) {
-        alert("Aus der Datei konnten keine gültigen Zeilen gelesen werden.\n\n" +
-          "Erwartet pro Zeile: ein Datum (z. B. 31.05.26 oder 2026-05-31) und ein " +
-          "Zählerstand (z. B. 15370). Ein Kommentar dahinter ist optional.");
-        return;
-      }
-      const skipNote = res.skipped ? ` (${res.skipped} Zeile(n) ohne erkennbares Datum übersprungen)` : "";
-      const withC = res.readings.filter((r) => r.comment).length;
-      const cNote = withC ? `, davon ${withC} mit Kommentar` : "";
-      if (!confirm(`${res.readings.length} Einträge erkannt${cNote}${skipNote}.\n\n` +
-        `Die Daten im Reiter „${tabName}" werden dadurch ersetzt. Fortfahren?`)) return;
-      data = res.readings;
-    } else {
-      try { data = JSON.parse(text); } catch (e) {
-        alert("Die Datei ist keine gültige Backup- (.json) oder CSV-Datei (.csv).");
-        return;
-      }
-      if (!Array.isArray(data) || !data.every((r) =>
-        r && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && !Number.isNaN(Number(r.value)))) {
-        alert("Die Datei hat nicht das erwartete Format.");
-        return;
-      }
-      if (!confirm(`${data.length} Einträge importieren? Die Daten im Reiter „${tabName}" werden ersetzt.`)) return;
-    }
-
-    readings = data.map((r) => ({
-      id: nextId++, date: r.date, value: Number(r.value),
-      comment: r.comment ? String(r.comment) : "",
-    }));
-    save();
-    resetFilters();
-    alert(`Import erfolgreich: ${data.length} Einträge im Reiter „${tabName}".`);
-  };
+  reader.onload = function () { processImportText(String(reader.result), file.name); };
   reader.readAsText(file);
 }
 
@@ -682,6 +685,25 @@ function init() {
   document.getElementById("import-file").addEventListener("change", (e) => {
     if (e.target.files[0]) importData(e.target.files[0]);
     e.target.value = "";
+  });
+
+  // Import per eingefügtem Text (zuverlässigster Weg am Handy)
+  document.getElementById("paste-btn").addEventListener("click", () => {
+    const box = document.getElementById("paste-box");
+    box.hidden = !box.hidden;
+    if (!box.hidden) document.getElementById("paste-area").focus();
+  });
+  document.getElementById("paste-cancel").addEventListener("click", () => {
+    document.getElementById("paste-box").hidden = true;
+    document.getElementById("paste-area").value = "";
+  });
+  document.getElementById("paste-import").addEventListener("click", () => {
+    const text = document.getElementById("paste-area").value;
+    if (!text.trim()) { alert("Bitte zuerst die Daten in das Feld einfügen."); return; }
+    if (processImportText(text, "")) {
+      document.getElementById("paste-area").value = "";
+      document.getElementById("paste-box").hidden = true;
+    }
   });
 
   // Service Worker -> macht die App auf dem Handy installierbar

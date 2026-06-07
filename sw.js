@@ -2,7 +2,7 @@
 // Lädt beim ersten Besuch alle App-Dateien in den Cache, danach läuft die
 // App komplett offline (ohne Server, ohne Internet).
 
-const CACHE = "stromzaehler-v3";
+const CACHE = "stromzaehler-v4";
 const ASSETS = [
   "./",
   "index.html",

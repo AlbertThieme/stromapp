@@ -188,6 +188,19 @@ th.r, td.r { text-align: right; }
 .backup-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .backup-row .hint { margin: 0; flex: 1 1 200px; }
 
+/* Import per Text einfügen */
+.paste-box { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 18px; }
+.paste-box[hidden] { display: none; }
+.paste-box label { display: block; margin-bottom: 8px; }
+.paste-box textarea {
+  width: 100%; padding: 12px 13px; border: 1px solid var(--border); border-radius: 11px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: .9rem; line-height: 1.45; background: #fbfcfe; resize: vertical;
+  transition: border-color .15s, box-shadow .15s;
+}
+.paste-box textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); background: #fff; }
+.paste-actions { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+
 @media (max-width: 620px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .brand h1 { font-size: 1.3rem; }
